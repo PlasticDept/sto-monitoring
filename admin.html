@@ -9,10 +9,14 @@
 <body>
   <h1>Upload & Edit Data Monitoring Pra STO</h1>
   
-  <input type="file" id="csvFile" accept=".csv" />
-  <button id="uploadBtn">Upload CSV</button>
+  <!-- FORM FIX -->
+  <form id="csvForm">
+    <input type="file" id="csvFile" accept=".csv" required />
+    <button type="submit">Upload CSV</button>
+  </form>
 
-  <table id="dataTable">
+  <!-- TABEL LENGKAP -->
+  <table id="data-table">
     <thead>
       <tr>
         <th>Group</th>
@@ -25,11 +29,14 @@
         <th>Upload Data 5</th>
         <th>Upload Data 6</th>
         <th>Upload Data 7</th>
+        <th>Total</th>
+        <th>Remaining</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
+  <!-- FIREBASE & SCRIPT -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -37,4 +44,3 @@
   <script src="js/admin.js"></script>
 </body>
 </html>
-
