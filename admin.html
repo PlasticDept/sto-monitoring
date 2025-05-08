@@ -1,1 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin - Monitoring Pra STO</title>
+  <link rel="stylesheet" href="css/admin.css"/>
+</head>
+<body>
+  <h1>Upload & Edit Data Monitoring Pra STO</h1>
+  
+  <input type="file" id="csvFile" accept=".csv" />
+  <button id="uploadBtn">Upload CSV</button>
+
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>Group</th>
+        <th>PIC</th>
+        <th>Target (LOC)</th>
+        <th>Upload Data 1</th>
+        <th>Upload Data 2</th>
+        <th>Upload Data 3</th>
+        <th>Upload Data 4</th>
+        <th>Upload Data 5</th>
+        <th>Upload Data 6</th>
+        <th>Upload Data 7</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
 
