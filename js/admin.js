@@ -84,10 +84,12 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Inline editing dan update ke database
+    // Inline editing dan update ke database
   document.addEventListener("input", function (e) {
     const cell = e.target;
     const row = cell.closest("tr");
+    if (!row || !cell.hasAttribute("data-key")) return; // Cegah error jika bukan dari <td>
+
     const group = row.getAttribute("data-group");
 
     const updatedData = {};
@@ -111,6 +113,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Kirim ke Firebase
     db.ref("monitoring_pra_sto/" + group).set(updatedData);
   });
+
 
   // Initial load
   loadDataFromFirebase();
