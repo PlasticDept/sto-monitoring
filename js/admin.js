@@ -1,117 +1,117 @@
-// Fungsi untuk parsing CSV ke array objek
-function parseCSV(csvText) {
-  const lines = csvText.trim().split("\n");
-  const headers = lines[0].split(",");
-  return lines.slice(1).map(line => {
-    const values = line.split(",");
-    const row = {};
-    headers.forEach((header, index) => {
-      row[header.trim().toLowerCase()] = values[index] ? values[index].trim() : "";
-    });
-    return row;
-  });
-}
-
-// Submit CSV dan simpan ke Firebase
-document.getElementById("csvForm").addEventListener("submit", function (e) {
-  e.preventDefault();
-  const file = document.getElementById("csvFile").files[0];
-  if (!file) return alert("Pilih file CSV terlebih dahulu.");
-
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    const csvText = e.target.result;
-    const parsed = parseCSV(csvText);
-
-    const formatted = parsed.map((row) => {
-      const target = parseInt(row["target"]) || 0;
-      const uploads = [
-        parseInt(row["upload1"]) || 0,
-        parseInt(row["upload2"]) || 0,
-        parseInt(row["upload3"]) || 0,
-        parseInt(row["upload4"]) || 0,
-        parseInt(row["upload5"]) || 0,
-        parseInt(row["upload6"]) || 0,
-        parseInt(row["upload7"]) || 0,
-      ];
-      const total = uploads.reduce((sum, val) => sum + val, 0);
-      const remaining = Math.max(target - total, 0);
-
-      return {
-        group: row["group"] || "",
-        pic: row["pic"] || "",
-        target: target,
-        upload1: uploads[0],
-        upload2: uploads[1],
-        upload3: uploads[2],
-        upload4: uploads[3],
-        upload5: uploads[4],
-        upload6: uploads[5],
-        upload7: uploads[6],
-        total: total,
-        remaining: remaining
-      };
-    });
-
-    // Simpan ke Firebase per baris
-    formatted.forEach((item, index) => {
-      db.ref("pra_sto_data/row_" + index).set(item);
-    });
-
-    alert("Data berhasil diunggah!");
-    loadDataFromFirebase(); // refresh tabel
-  };
-  reader.readAsText(file);
-});
-
-// Fungsi untuk load data ke tabel
-function loadDataFromFirebase() {
-  const tbody = document.querySelector("#data-table tbody");
-  tbody.innerHTML = "";
-
-  db.ref("pra_sto_data").once("value", (snapshot) => {
-    const data = snapshot.val();
-    if (!data) return;
-
-    Object.entries(data).forEach(([id, item]) => {
-      const row = document.createElement("tr");
-      row.setAttribute("data-id", id);
-
-      row.innerHTML = `
-        <td contenteditable="true" data-field="group">${item.group}</td>
-        <td contenteditable="true" data-field="pic">${item.pic}</td>
-        <td contenteditable="true" data-field="target">${item.target}</td>
-        <td contenteditable="true" data-field="upload1">${item.upload1 || ""}</td>
-        <td contenteditable="true" data-field="upload2">${item.upload2 || ""}</td>
-        <td contenteditable="true" data-field="upload3">${item.upload3 || ""}</td>
-        <td contenteditable="true" data-field="upload4">${item.upload4 || ""}</td>
-        <td contenteditable="true" data-field="upload5">${item.upload5 || ""}</td>
-        <td contenteditable="true" data-field="upload6">${item.upload6 || ""}</td>
-        <td contenteditable="true" data-field="upload7">${item.upload7 || ""}</td>
-        <td>${item.total}</td>
-        <td>${item.remaining}</td>
-      `;
-      tbody.appendChild(row);
-    });
-  });
-}
-
-// Auto-update saat sel diedit
-document.addEventListener("input", function (e) {
-  const cell = e.target;
-  if (cell.tagName === "TD" && cell.hasAttribute("contenteditable")) {
-    const row = cell.closest("tr");
-    const rowId = row.getAttribute("data-id");
-    const field = cell.getAttribute("data-field");
-    const value = cell.innerText;
-
-    if (rowId && field) {
-      db.ref(`pra_sto_data/${rowId}/${field}`).set(value);
-    }
-  }
-});
-
-// Load data saat halaman pertama kali dibuka
 document.addEventListener("DOMContentLoaded", function () {
+  const csvForm = document.getElementById("csvForm");
+  const csvFile = document.getElementById("csvFile");
+  const tableBody = document.querySelector("#data-table tbody");
+  const db = firebase.database();
+
+  // Fungsi hitung total dan sisa
+  function calculateTotals(dataRow) {
+    const uploads = [
+      dataRow["Upload Data 1"], dataRow["Upload Data 2"], dataRow["Upload Data 3"],
+      dataRow["Upload Data 4"], dataRow["Upload Data 5"], dataRow["Upload Data 6"],
+      dataRow["Upload Data 7"]
+    ];
+    const totalUpload = uploads.reduce((sum, val) => sum + (parseInt(val) || 0), 0);
+    const target = parseInt(dataRow["Target (LOC)"]) || 0;
+    const remaining = Math.max(target - totalUpload, 0);
+
+    return { totalUpload, remaining };
+  }
+
+  // Upload CSV ke Firebase
+  csvForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const file = csvFile.files[0];
+    if (!file) return alert("Pilih file CSV terlebih dahulu.");
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: function (results) {
+        const data = results.data;
+
+        data.forEach((row, index) => {
+          const groupName = `GROUP_${index + 1}`;
+          const { totalUpload, remaining } = calculateTotals(row);
+
+          const dataToSave = {
+            Group: groupName,
+            PIC: row["PIC"] || "",
+            "Target (LOC)": row["Target (LOC)"] || "0",
+            "Upload Data 1": row["Upload Data 1"] || "0",
+            "Upload Data 2": row["Upload Data 2"] || "0",
+            "Upload Data 3": row["Upload Data 3"] || "0",
+            "Upload Data 4": row["Upload Data 4"] || "0",
+            "Upload Data 5": row["Upload Data 5"] || "0",
+            "Upload Data 6": row["Upload Data 6"] || "0",
+            "Upload Data 7": row["Upload Data 7"] || "0",
+            TOTAL: totalUpload.toString(),
+            REMAINING: remaining.toString()
+          };
+
+          db.ref("monitoring_pra_sto/" + groupName).set(dataToSave);
+        });
+
+        alert("Data berhasil diupload ke Firebase.");
+        csvForm.reset();
+        loadDataFromFirebase(); // Refresh tampilan
+      }
+    });
+  });
+
+  // Tampilkan data dari Firebase
+  function loadDataFromFirebase() {
+    db.ref("monitoring_pra_sto").once("value", function (snapshot) {
+      tableBody.innerHTML = "";
+
+      snapshot.forEach(function (childSnapshot) {
+        const data = childSnapshot.val();
+
+        const row = document.createElement("tr");
+
+        Object.keys(data).forEach((key) => {
+          const cell = document.createElement("td");
+          cell.textContent = data[key];
+          cell.setAttribute("data-key", key);
+          cell.setAttribute("contenteditable", key !== "Group");
+          row.appendChild(cell);
+        });
+
+        row.setAttribute("data-group", data["Group"]);
+        tableBody.appendChild(row);
+      });
+    });
+  }
+
+  // Inline editing dan update ke database
+  document.addEventListener("input", function (e) {
+    const cell = e.target;
+    const row = cell.closest("tr");
+    const group = row.getAttribute("data-group");
+
+    const updatedData = {};
+    row.querySelectorAll("td").forEach((td) => {
+      const key = td.getAttribute("data-key");
+      updatedData[key] = td.textContent.trim();
+    });
+
+    // Hitung ulang total dan remaining
+    const { totalUpload, remaining } = calculateTotals(updatedData);
+    updatedData.TOTAL = totalUpload.toString();
+    updatedData.REMAINING = remaining.toString();
+
+    // Perbarui tampilan langsung
+    row.querySelectorAll("td").forEach((td) => {
+      const key = td.getAttribute("data-key");
+      if (key === "TOTAL") td.textContent = updatedData.TOTAL;
+      if (key === "REMAINING") td.textContent = updatedData.REMAINING;
+    });
+
+    // Kirim ke Firebase
+    db.ref("monitoring_pra_sto/" + group).set(updatedData);
+  });
+
+  // Initial load
   loadDataFromFirebase();
 });
