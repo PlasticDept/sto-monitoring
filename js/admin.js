@@ -1,7 +1,3 @@
-// Gunakan konfigurasi dari config.js
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
 // Fungsi untuk parsing CSV ke array objek
 function parseCSV(csvText) {
   const lines = csvText.trim().split("\n");
